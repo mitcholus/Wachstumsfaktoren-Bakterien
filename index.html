@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bakterienwachstum – Einflussfaktoren (interaktiv)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111a2e; --text:#e9eefc; --muted:#a9b3d6;
+      --accent:#6aa9ff; --good:#35d07f; --bad:#ff5c7a;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(106,169,255,.20), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(53,208,127,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:22px 18px 10px;
+      max-width: 1100px; margin: 0 auto;
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    .title{display:flex; flex-direction:column; gap:6px; min-width:260px;}
+    h1{font-size:20px; margin:0}
+    .sub{color:var(--muted); font-size:13px; line-height:1.35; max-width: 760px}
+    .topbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .pill{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding:8px 12px;
+      font-size:13px;
+      display:flex; gap:10px; align-items:center;
+    }
+    .progress{width:160px; height:9px; background: rgba(255,255,255,.08); border-radius:999px; overflow:hidden;}
+    .bar{height:100%; width:0%; background: linear-gradient(90deg, var(--accent), #8fe2ff); transition: width .25s;}
+    main{max-width:1100px; margin:0 auto; padding: 6px 18px 30px;}
+    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap:14px;}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .overview{grid-column: 1 / -1;}
+    .cards{grid-column: 1 / -1; display:grid; grid-template-columns: repeat(12,1fr); gap:14px;}
+    .factor{
+      grid-column: span 6;
+      background: linear-gradient(180deg, rgba(17,26,46,.9), rgba(15,23,48,.85));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:16px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease;
+      position:relative;
+      min-height: 122px;
+      overflow:hidden;
+    }
+    .factor:hover{transform: translateY(-2px); border-color: rgba(106,169,255,.45);}
+    .factor h3{margin:0 0 6px; font-size:16px;}
+    .factor p{margin:0; color:var(--muted); font-size:13px; line-height:1.35;}
+    .badge{
+      position:absolute; right:14px; top:14px;
+      padding:6px 10px; border-radius:999px;
+      font-size:12px; border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      display:flex; gap:8px; align-items:center;
+    }
+    .dot{width:8px; height:8px; border-radius:50%; background: rgba(255,255,255,.35);}
+    .done .dot{background: var(--good);}
+    .done .badge{border-color: rgba(53,208,127,.45); background: rgba(53,208,127,.12);}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+    button{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+    }
+    button:hover{border-color: rgba(106,169,255,.45);}
+    .primary{
+      background: linear-gradient(90deg, rgba(106,169,255,.90), rgba(143,226,255,.75));
+      border-color: rgba(106,169,255,.55);
+      color:#0a1020;
+    }
+    .danger{border-color: rgba(255,92,122,.45); background: rgba(255,92,122,.10);}
+    .panel{grid-column: 1 / -1; display:none;}
+    .panel.active{display:block;}
+    .panel h2{margin:0 0 6px; font-size:18px;}
+    .panel .hint{color:var(--muted); font-size:13px; line-height:1.5; margin:0 0 12px;}
+    .cols{display:grid; grid-template-columns: repeat(12,1fr); gap:14px;}
+    .left{grid-column: span 7;}
+    .right{grid-column: span 5;}
+    @media (max-width: 900px){
+      .factor{grid-column: span 12;}
+      .left,.right{grid-column: 1 / -1;}
+    }
+    .task{
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding:14px;
+      margin-top:12px;
+    }
+    .task h4{margin:0 0 8px; font-size:14px;}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .row label{font-size:13px; color:var(--muted)}
+    input[type="text"], select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height: 90px; resize: vertical;}
+    input[type="range"]{width:100%}
+    .feedback{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      font-size:13px;
+      display:none;
+    }
+    .feedback.good{display:block; border-color: rgba(53,208,127,.45); background: rgba(53,208,127,.10);}
+    .feedback.bad{display:block; border-color: rgba(255,92,122,.45); background: rgba(255,92,122,.10);}
+    canvas{
+      width:100%; height:auto;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+    }
+    .mini{font-size:12px; color:var(--muted);}
+    .summaryWrap{display:none;}
+    .summaryWrap.active{display:block;}
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--border);
+    }
+    th,td{padding:10px 10px; border-bottom:1px solid var(--border); vertical-align: top; font-size:13px;}
+    th{background: rgba(255,255,255,.06); text-align:left;}
+    td{color: var(--text);}
+    .muted{color:var(--muted)}
+    .kpi{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .kpi .pill{background: rgba(255,255,255,.05)}
+    .footerNote{margin-top:10px; color:var(--muted); font-size:12px; line-height:1.35;}
+    .infoBox{
+      border:1px solid rgba(106,169,255,.35);
+      background: rgba(106,169,255,.10);
+      border-radius: 14px;
+      padding:12px;
+      color: rgba(255,255,255,.86);
+      font-size:13px;
+      line-height:1.5;
+      margin-top:10px;
+    }
+    .simHeader{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline;}
+    .simValue{font-weight:700; color: rgba(255,255,255,.92);}
+  </style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1>Bakterienwachstum – Einflussfaktoren (interaktiv)</h1>
+    <div class="sub">
+      Bearbeite alle fünf Einflussfaktoren. Wenn alles erledigt ist, erscheint die <b>Sicherungsübersicht</b>.
+      Dort machst du einen Screenshot oder lädst eine Zusammenfassung herunter.
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="pill">
+      <span id="statusText">Fortschritt: 0/5</span>
+      <div class="progress" aria-label="Fortschritt">
+        <div class="bar" id="progressBar"></div>
+      </div>
+    </div>
+    <button id="btnHome" title="Zur Übersichtsseite">Übersicht</button>
+    <button id="btnReset" class="danger" title="Setzt alle Lösungen zurück">Reset</button>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="card overview" id="home">
+    <div class="btnrow" style="justify-content:space-between; align-items:center;">
+      <div class="row" style="gap:12px;">
+        <div style="min-width:260px; max-width:560px;">
+          <label for="studentName" class="mini">Name (für die Sicherung):</label>
+          <input id="studentName" type="text" placeholder="Vorname Nachname" />
+        </div>
+        <div style="min-width:220px;">
+          <label for="studentClass" class="mini">Klasse:</label>
+          <input id="studentClass" type="text" placeholder="z. B. 7a" />
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button class="primary" id="btnOpenSummary" disabled>Sicherung anzeigen</button>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="pill"><span class="muted">Ziel:</span>&nbsp;erklären, wie Umweltbedingungen die Wachstumsrate verändern</div>
+      <div class="pill"><span class="muted">Merke:</span>&nbsp;Wachstumsrate = „wie schnell teilen sich die Zellen?“</div>
+    </div>
+
+    <div style="margin-top:14px;" class="cards" id="factorCards"></div>
+  </section>
+
+  <!-- Factor panels -->
+  <section class="card panel" id="panel_temp"></section>
+  <section class="card panel" id="panel_nutrients"></section>
+  <section class="card panel" id="panel_ph"></section>
+  <section class="card panel" id="panel_oxygen"></section>
+  <section class="card panel" id="panel_water"></section>
+
+  <!-- Summary -->
+  <section class="card summaryWrap" id="summary">
+    <h2>Sicherung: Einflussfaktoren auf das Bakterienwachstum</h2>
+    <p class="hint">
+      Wenn alles korrekt bearbeitet ist, ist diese Übersicht vollständig. Mache einen Screenshot (oder nutze „PNG herunterladen“).
+    </p>
+
+    <div class="task">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div><b>Name:</b> <span id="sumName" class="muted">—</span></div>
+          <div><b>Klasse:</b> <span id="sumClass" class="muted">—</span></div>
+          <div><b>Datum:</b> <span id="sumDate" class="muted">—</span></div>
+        </div>
+        <div class="btnrow">
+          <button class="primary" id="btnDownloadPNG">PNG herunterladen</button>
+          <button id="btnDownloadTXT">TXT herunterladen</button>
+          <button id="btnPrint">Drucken / als PDF speichern</button>
+        </div>
+      </div>
+      <div class="footerNote">
+        Screenshot: Windows (Win+Shift+S), iPad (Power+Lauter). Alternativ: als PDF drucken oder PNG herunterladen.
+      </div>
+    </div>
+
+    <div class="task" id="summaryTableWrap">
+      <table aria-label="Sicherungsübersicht">
+        <thead>
+          <tr>
+            <th style="width:18%;">Faktor</th>
+            <th style="width:32%;">Was passiert mit der Wachstumsrate?</th>
+            <th style="width:25%;">Begriff / Merksatz</th>
+            <th style="width:25%;">Beispiel aus Alltag/Medizin</th>
+          </tr>
+        </thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </div>
+
+    <div class="task">
+      <h4>Mini-Transfer (optional)</h4>
+      <div class="muted" style="font-size:13px; line-height:1.45;">
+        Warum werden Lebensmittel gekühlt, gesalzen oder gezuckert, um sie haltbarer zu machen? Formuliere mit mindestens 2 Faktoren.
+      </div>
+      <textarea id="transferAnswer" placeholder="Deine Antwort (optional)"></textarea>
+    </div>
+
+    <div class="task">
+      <h4>Vorschau für PNG-Download</h4>
+      <p class="mini">Klicke „PNG herunterladen“, um diese Sicherung als Bild zu speichern.</p>
+      <canvas id="summaryCanvas" width="1400" height="900"></canvas>
+    </div>
+  </section>
+</main>
+
+<script>
+  /**********************
+   * Daten + State
+   **********************/
+  const FACTORS = [
+    {
+      id:"temp",
+      title:"Temperatur",
+      desc:"Kälte bremst, Hitze kann Enzyme zerstören. Optimum dazwischen.",
+      panelId:"panel_temp",
+      keyPoints:{
+        rate:"Unterhalb des Optimums laufen Reaktionen langsamer → Teilung langsamer. Oberhalb des Optimums denaturieren Proteine → Wachstum bricht ein/stoppt.",
+        term:"Temperatur-Optimum; Denaturierung (Proteine verlieren Struktur).",
+        example:"Kühlen verlangsamt; Abkochen/Erhitzen tötet viele Bakterien."
+      }
+    },
+    {
+      id:"nutrients",
+      title:"Nährstoffe",
+      desc:"Energie- und Baustoffe begrenzen, wie schnell neue Zellen entstehen.",
+      panelId:"panel_nutrients",
+      keyPoints:{
+        rate:"Knappere Nährstoffe → weniger Energie/Baustoffe → geringere Wachstumsrate, Stationärphase schneller.",
+        term:"Limitierender Faktor: der knappste notwendige Stoff begrenzt das Wachstum.",
+        example:"Petrischale: erst starkes Wachstum, später Stopp, weil Nährstoffe verbraucht sind."
+      }
+    },
+    {
+      id:"ph",
+      title:"pH-Wert",
+      desc:"Enzyme arbeiten nur in passenden pH-Bereichen. Extreme hemmen Wachstum.",
+      panelId:"panel_ph",
+      keyPoints:{
+        rate:"Abweichung vom pH-Optimum stört Enzyme/Membranen → Wachstum sinkt.",
+        term:"pH-Optimum (viele nahe 7), Spezialisten: säure-/alkaliliebend.",
+        example:"Saurer Magen hemmt viele Keime; Milchsäure in Lebensmitteln kann konservieren."
+      }
+    },
+    {
+      id:"oxygen",
+      title:"Sauerstoff (O₂)",
+      desc:"Manche Bakterien nutzen O₂, andere werden durch O₂ geschädigt.",
+      panelId:"panel_oxygen",
+      keyPoints:{
+        rate:"Aerobe wachsen mit O₂ oft schneller (mehr Energie). Streng anaerobe werden durch O₂ gehemmt/geschädigt.",
+        term:"Aerob: braucht O₂; anaerob: ohne O₂; fakultativ anaerob: kann beides.",
+        example:"Darm: wenig O₂ → viele anaerobe; Oberfläche/Wunde: mehr O₂ → andere Arten."
+      }
+    },
+    {
+      id:"water",
+      title:"Wasserverfügbarkeit (Salz/Zucker)",
+      desc:"Wenn Wasser „gebunden“ ist, können Bakterien schlechter wachsen (Osmose).",
+      panelId:"panel_water",
+      keyPoints:{
+        rate:"Wenig verfügbares Wasser → Wasserverlust der Zelle → Stoffwechsel/Wachstum sinkt.",
+        term:"Osmose: Wasser wandert zur höheren Teilchenkonzentration; hohe Salz-/Zuckerkonzentration außen entzieht Wasser.",
+        example:"Marmelade (viel Zucker) und Pökeln (Salz) machen Lebensmittel haltbarer."
+      }
+    }
+  ];
+
+  const STORAGE_KEY = "bakterien_faktoren_v2";
+  const defaultState = {
+    done: { temp:false, nutrients:false, ph:false, oxygen:false, water:false },
+    studentName: "",
+    studentClass: "",
+    transferAnswer: ""
+  };
+  let state = loadState();
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return structuredClone(defaultState);
+      const parsed = JSON.parse(raw);
+      return {
+        ...structuredClone(defaultState),
+        ...parsed,
+        done: { ...structuredClone(defaultState.done), ...(parsed.done||{}) }
+      };
+    }catch(e){
+      return structuredClone(defaultState);
+    }
+  }
+  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+  const el = (id)=>document.getElementById(id);
+
+  function setView(viewId){
+    el("home").style.display = (viewId === "home") ? "block" : "none";
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    document.querySelectorAll(".summaryWrap").forEach(s=>s.classList.remove("active"));
+
+    if(viewId.startsWith("panel_")) el(viewId).classList.add("active");
+    if(viewId === "summary"){ el("summary").classList.add("active"); renderSummary(); drawSummaryCanvas(); }
+
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function updateProgress(){
+    const doneCount = Object.values(state.done).filter(Boolean).length;
+    el("statusText").textContent = `Fortschritt: ${doneCount}/5`;
+    el("progressBar").style.width = `${(doneCount/5)*100}%`;
+    el("btnOpenSummary").disabled = doneCount < 5;
+  }
+
+  function factorCardHTML(f){
+    const done = !!state.done[f.id];
+    return `
+      <div class="factor ${done ? "done" : ""}" role="button" tabindex="0" data-open="${f.panelId}">
+        <div class="badge"><span class="dot"></span><span>${done ? "abgeschlossen" : "offen"}</span></div>
+        <h3>${f.title}</h3>
+        <p>${f.desc}</p>
+      </div>
+    `;
+  }
+
+  function renderFactorCards(){
+    el("factorCards").innerHTML = FACTORS.map(f=>factorCardHTML(f)).join("");
+    document.querySelectorAll(".factor").forEach(card=>{
+      const open = ()=> setView(card.dataset.open);
+      card.addEventListener("click", open);
+      card.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") open(); });
+    });
+  }
+
+  /**********************
+   * Simulation: Logistisches Wachstum mit faktorabhängiger Rate (vereinfacht)
+   **********************/
+  function drawGrowth(canvas, rate, label){
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    // axes
+    ctx.strokeStyle = "rgba(255,255,255,.25)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(70, h-60); ctx.lineTo(w-30, h-60);
+    ctx.moveTo(70, h-60); ctx.lineTo(70, 30);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    ctx.font = "18px system-ui";
+    ctx.fillText("Zeit", w-90, h-25);
+    ctx.save(); ctx.translate(20, h/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText("Zellzahl", 0, 0);
+    ctx.restore();
+
+    // curve
+    const K = 1.0;
+    const r = 0.4 + 5.2 * rate; // steepness from rate
+    const t0 = 0.5;
+
+    ctx.strokeStyle = "rgba(106,169,255,.95)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+
+    const plotX0 = 70, plotX1 = w-30;
+    const plotY0 = h-60, plotY1 = 30;
+    const N = 240;
+
+    for(let i=0;i<=N;i++){
+      const t = i/N;
+      const y = K / (1 + Math.exp(-r*(t - t0)));
+      const xPix = plotX0 + t*(plotX1-plotX0);
+      const yPix = plotY0 - y*(plotY0-plotY1);
+      if(i===0) ctx.moveTo(xPix, yPix);
+      else ctx.lineTo(xPix, yPix);
+    }
+    ctx.stroke();
+
+    // label
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.font = "16px system-ui";
+    ctx.fillText(label, 90, 55);
+  }
+
+  /**********************
+   * Faktor -> Rate Mapping
+   * Jede Simulation nutzt einen Regler mit „echter“ Skala (°C, pH, %, etc.)
+   * und berechnet daraus eine Wachstumsrate (0..1).
+   **********************/
+  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+  // glockenförmig um ein Optimum: 1 - (|x-opt|/spread)^2
+  function bellRate(x, opt, spread){
+    const d = Math.abs(x - opt);
+    const r = 1 - Math.pow(d / spread, 2);
+    return clamp01(r);
+  }
+
+  // monotone Sättigung: x in [0..1]
+  function satRate(x){ return clamp01(Math.pow(x, 0.85)); }
+
+  // für O2: je nach Typ
+  function oxygenRate(o2Percent, type){
+    const x = clamp01(o2Percent / 21); // 21% ~ Luft
+    if(type==="aerob") return satRate(x);
+    if(type==="anaerob_strict") return clamp01(1 - Math.pow(x, 0.9)); // je mehr O2, desto schlechter
+    // fakultativ: relativ robust
+    return clamp01(0.55 + 0.35*x);
+  }
+
+  // Wasserverfügbarkeit: aw-like (0.70..1.00) -> stark nichtlinear
+  function waterRate(aw){
+    // unter ~0.85 starkes Bremsen
+    const x = (aw - 0.70) / (1.00 - 0.70);
+    return clamp01(Math.pow(x, 1.6));
+  }
+
+  /**********************
+   * Panels
+   **********************/
+  function panelTemplate({
+    id, title, introHTML, task1HTML, task2HTML, sim
+  }){
+    return `
+      <div class="btnrow" style="justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div>
+          <h2>${title}</h2>
+          <div class="hint">${introHTML}</div>
+        </div>
+        <div class="btnrow">
+          <button id="back_${id}">Zur Übersicht</button>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="left">
+          <div class="task">
+            <h4>Aufgabe 1</h4>
+            ${task1HTML}
+            <div class="btnrow" style="margin-top:10px;">
+              <button class="primary" id="check1_${id}">Prüfen</button>
+            </div>
+            <div class="feedback" id="fb1_${id}"></div>
+          </div>
+
+          <div class="task">
+            <h4>Aufgabe 2</h4>
+            ${task2HTML}
+            <div class="btnrow" style="margin-top:10px;">
+              <button class="primary" id="check2_${id}">Prüfen</button>
+            </div>
+            <div class="feedback" id="fb2_${id}"></div>
+          </div>
+
+          <div class="task">
+            <h4>Fertig?</h4>
+            <div class="muted" style="font-size:13px; line-height:1.45;">
+              Wenn beide Aufgaben korrekt sind, wird dieser Faktor als abgeschlossen markiert.
+            </div>
+            <div class="btnrow" style="margin-top:10px;">
+              <button id="mark_${id}" class="primary">Als abgeschlossen markieren</button>
+            </div>
+            <div class="feedback" id="fbDone_${id}"></div>
+          </div>
+        </div>
+
+        <div class="right">
+          <div class="task">
+            <div class="simHeader">
+              <h4 style="margin:0;">Simulation</h4>
+              <div class="simValue" id="simVal_${id}"></div>
+            </div>
+            <div class="mini" id="simMini_${id}"></div>
+
+            <input type="range" id="slider_${id}" min="${sim.min}" max="${sim.max}" step="${sim.step}" value="${sim.value}" />
+            <div class="row" style="justify-content:space-between;">
+              <span class="mini">${sim.leftLabel}</span><span class="mini">${sim.rightLabel}</span>
+            </div>
+
+            <div style="margin-top:10px;">
+              <canvas id="cv_${id}" width="900" height="520"></canvas>
+            </div>
+
+            <div class="infoBox" id="simExplain_${id}"></div>
+          </div>
+
+          <div class="task">
+            <h4>Merksatz (zum Abschreiben)</h4>
+            <div class="muted" style="font-size:13px; line-height:1.5;" id="merksatz_${id}"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function mountPanels(){
+    // Temperatur
+    el("panel_temp").innerHTML = panelTemplate({
+      id:"temp",
+      title:"Temperatur",
+      introHTML: `
+        Bakterien sind „Chemie in der Zelle“: Viele Reaktionen werden von <b>Enzymen</b> gesteuert.
+        <ul style="margin:8px 0 0 18px; color: var(--muted);">
+          <li><b>Zu kalt:</b> Teilchen bewegen sich langsamer → Enzyme arbeiten langsamer → Teilung langsamer.</li>
+          <li><b>Optimum:</b> Enzyme arbeiten am besten → höchste Wachstumsrate.</li>
+          <li><b>Zu heiß:</b> Proteine/Enzyme können ihre Form verlieren (<b>Denaturierung</b>) → Wachstum bricht ein.</li>
+        </ul>
+      `,
+      task1HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Welche Aussage passt am besten?</div>
+        <select id="a1_temp">
+          <option value="">Bitte auswählen …</option>
+          <option value="A">Je wärmer, desto schneller, egal wie heiß.</option>
+          <option value="B">Bei zu hoher Temperatur können Enzyme denaturieren, Wachstum stoppt.</option>
+          <option value="C">Temperatur hat keinen Einfluss auf Bakterien.</option>
+        </select>
+      `,
+      task2HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Ordne zu: Was passiert im Kühlschrank vs. beim Abkochen?</div>
+        <label class="mini">Kühlschrank (ca. 4°C):</label>
+        <select id="a2a_temp">
+          <option value="">Auswählen …</option>
+          <option value="slow">Wachstum verlangsamt sich stark.</option>
+          <option value="kill">Viele Bakterien sterben ab.</option>
+        </select>
+        <div style="height:8px"></div>
+        <label class="mini">Abkochen (100°C):</label>
+        <select id="a2b_temp">
+          <option value="">Auswählen …</option>
+          <option value="slow">Wachstum verlangsamt sich stark.</option>
+          <option value="kill">Viele Bakterien sterben ab.</option>
+        </select>
+      `,
+      sim: { min:0, max:70, step:1, value:37, leftLabel:"kalt", rightLabel:"heiß" }
+    });
+
+    // Nährstoffe
+    el("panel_nutrients").innerHTML = panelTemplate({
+      id:"nutrients",
+      title:"Nährstoffe",
+      introHTML: `
+        Bakterien brauchen <b>Baustoffe</b> (z. B. für Zellwand, Membran, DNA) und <b>Energie</b> (für Transport und Aufbau).
+        Wenn Nährstoffe knapp werden, kann die Zelle weniger „Material“ einbauen und sich seltener teilen.
+        <div class="infoBox" style="margin-top:10px;">
+          <b>Begriff „limitierender Faktor“:</b> Der Stoff, der am knappsten ist (aber unbedingt gebraucht wird), bestimmt, wie stark die Population noch wachsen kann.
+        </div>
+      `,
+      task1HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Wähle die beste Begründung:</div>
+        <select id="a1_nutrients">
+          <option value="">Bitte auswählen …</option>
+          <option value="A">Ohne Nährstoffe können Bakterien keine neuen Zellbestandteile aufbauen.</option>
+          <option value="B">Nährstoffe sind nur für Pflanzen wichtig.</option>
+          <option value="C">Je weniger Nährstoffe, desto schneller teilen sich Bakterien.</option>
+        </select>
+      `,
+      task2HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">„Limitierender Faktor“: Markiere den knappsten Stoff.</div>
+        <label class="mini">In einer Kultur sind viel Wasser, viel Sauerstoff, aber wenig Zucker vorhanden. Was begrenzt am ehesten das Wachstum?</label>
+        <select id="a2_nutrients">
+          <option value="">Auswählen …</option>
+          <option value="water">Wasser</option>
+          <option value="oxygen">Sauerstoff</option>
+          <option value="sugar">Zucker (Energiequelle)</option>
+        </select>
+      `,
+      sim: { min:0, max:100, step:1, value:60, leftLabel:"kaum Nährstoffe", rightLabel:"viel Nährstoffe" }
+    });
+
+    // pH
+    el("panel_ph").innerHTML = panelTemplate({
+      id:"ph",
+      title:"pH-Wert",
+      introHTML: `
+        Der <b>pH-Wert</b> beschreibt, wie sauer oder basisch eine Umgebung ist.
+        Viele Enzyme funktionieren nur in einem bestimmten pH-Bereich gut.
+        <ul style="margin:8px 0 0 18px; color: var(--muted);">
+          <li>pH 7 = <b>neutral</b></li>
+          <li>kleiner als 7 = <b>sauer</b></li>
+          <li>größer als 7 = <b>basisch</b></li>
+        </ul>
+        Starke Abweichungen können Proteine und Membranen stören → Wachstum sinkt.
+      `,
+      task1HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Viele Bakterien wachsen am besten bei …</div>
+        <select id="a1_ph">
+          <option value="">Bitte auswählen …</option>
+          <option value="A">pH 1 (sehr sauer)</option>
+          <option value="B">pH 7 (neutral)</option>
+          <option value="C">pH 14 (sehr basisch)</option>
+        </select>
+      `,
+      task2HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Magen vs. Haut: Wo werden viele Bakterien eher gehemmt?</div>
+        <label class="mini">Magen (sehr sauer):</label>
+        <select id="a2a_ph">
+          <option value="">Auswählen …</option>
+          <option value="hemm">Viele werden gehemmt/abgetötet.</option>
+          <option value="egal">pH macht keinen Unterschied.</option>
+        </select>
+        <div style="height:8px"></div>
+        <label class="mini">Haut (leicht sauer):</label>
+        <select id="a2b_ph">
+          <option value="">Auswählen …</option>
+          <option value="hemm_mild">Hemmt einige, aber weniger stark als der Magen.</option>
+          <option value="hemm">Viele werden wie im Magen abgetötet.</option>
+        </select>
+      `,
+      sim: { min:1, max:14, step:0.1, value:7.0, leftLabel:"sauer", rightLabel:"basisch" }
+    });
+
+    // Sauerstoff
+    el("panel_oxygen").innerHTML = panelTemplate({
+      id:"oxygen",
+      title:"Sauerstoff (O₂)",
+      introHTML: `
+        Sauerstoff kann für manche Bakterien sehr nützlich sein (mehr Energiegewinnung), für andere ist er sogar schädlich.
+        <ul style="margin:8px 0 0 18px; color: var(--muted);">
+          <li><b>aerob:</b> braucht O₂</li>
+          <li><b>streng anaerob:</b> verträgt O₂ nicht</li>
+          <li><b>fakultativ anaerob:</b> kann mit oder ohne O₂ wachsen</li>
+        </ul>
+      `,
+      task1HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Wähle die richtige Zuordnung:</div>
+        <label class="mini">Aerob:</label>
+        <select id="a1a_oxygen">
+          <option value="">Auswählen …</option>
+          <option value="need">braucht O₂</option>
+          <option value="avoid">verträgt O₂ nicht</option>
+        </select>
+        <div style="height:8px"></div>
+        <label class="mini">Streng anaerob:</label>
+        <select id="a1b_oxygen">
+          <option value="">Auswählen …</option>
+          <option value="need">braucht O₂</option>
+          <option value="avoid">verträgt O₂ nicht</option>
+        </select>
+      `,
+      task2HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Ein Darmabschnitt enthält wenig O₂. Welche Gruppe passt am besten?</div>
+        <select id="a2_oxygen">
+          <option value="">Auswählen …</option>
+          <option value="anaerob">Anaerobe Bakterien</option>
+          <option value="aerob">Nur aerobe Bakterien</option>
+          <option value="none">Keine Bakterien können dort leben</option>
+        </select>
+      `,
+      sim: { min:0, max:21, step:1, value:10, leftLabel:"0% O₂", rightLabel:"21% O₂ (Luft)" }
+    });
+
+    // Wasser/Feuchtigkeit
+    el("panel_water").innerHTML = panelTemplate({
+      id:"water",
+      title:"Wasserverfügbarkeit (Salz/Zucker) & Osmose",
+      introHTML: `
+        Bakterien brauchen Wasser für fast alle Lebensvorgänge (Stoffwechsel, Transport in der Zelle).
+        Wenn außen <b>viel Salz</b> oder <b>viel Zucker</b> ist, ist weniger Wasser „frei verfügbar“ – das bremst Wachstum.
+        <div class="infoBox">
+          <b>Osmose (kurz):</b> Wasser kann durch Zellmembranen wandern. Es bewegt sich dorthin, wo <b>mehr gelöste Teilchen</b> sind.
+          <br>➡️ Außen sehr salzig/zuckrig (viele Teilchen) → Wasser wandert <b>aus</b> der Bakterienzelle heraus → die Zelle trocknet aus → Wachstum sinkt.
+        </div>
+      `,
+      task1HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Was erklärt am besten, warum Marmelade oft länger haltbar ist?</div>
+        <select id="a1_water">
+          <option value="">Bitte auswählen …</option>
+          <option value="A">Viel Zucker bindet Wasser → Bakterien können schlechter wachsen.</option>
+          <option value="B">Zucker ist ein Gift für Bakterien und tötet sofort alle ab.</option>
+          <option value="C">Bakterien wachsen immer schneller, wenn Zucker da ist.</option>
+        </select>
+      `,
+      task2HTML: `
+        <div class="muted" style="font-size:13px; line-height:1.45;">Osmose: In sehr salziger Umgebung …</div>
+        <select id="a2_water">
+          <option value="">Auswählen …</option>
+          <option value="out">tritt Wasser aus der Bakterienzelle aus.</option>
+          <option value="in">tritt Wasser in die Bakterienzelle ein.</option>
+          <option value="none">passiert nichts.</option>
+        </select>
+      `,
+      sim: { min:70, max:100, step:1, value:95, leftLabel:"wenig verfügbar", rightLabel:"viel verfügbar" } // aw*100 (vereinfacht)
+    });
+
+    // Back buttons
+    ["temp","nutrients","ph","oxygen","water"].forEach(id=>{
+      el(`back_${id}`).addEventListener("click", ()=>setView("home"));
+    });
+
+    // Merksätze
+    const mp = {
+      temp: "Merksatz: Temperatur beeinflusst Enzyme. Zu kalt = langsamer Stoffwechsel; zu heiß = Denaturierung → Wachstum stoppt.",
+      nutrients: "Merksatz: Nährstoffe liefern Energie und Baustoffe. Der knappste notwendige Stoff ist der limitierende Faktor.",
+      ph: "Merksatz: Enzyme arbeiten nur in passenden pH-Bereichen. Extreme pH-Werte hemmen/stoppen das Wachstum.",
+      oxygen: "Merksatz: Aerob = braucht O₂; streng anaerob verträgt O₂ nicht; fakultativ anaerob kann mit/ohne O₂ wachsen.",
+      water: "Merksatz: Salz/Zucker senken die Wasserverfügbarkeit. Durch Osmose verliert die Zelle Wasser → Wachstum sinkt."
+    };
+    Object.entries(mp).forEach(([id,txt])=> el(`merksatz_${id}`).textContent = txt);
+
+    // Init simulations
+    initSimulations();
+
+    // Hook up checks
+    setupChecks();
+  }
+
+  function initSimulations(){
+    // Temperatur: 0..70°C, Optimum ~37°C, Spread ~22
+    setupSim("temp", () => {
+      const T = parseFloat(el("slider_temp").value);
+      const rate = bellRate(T, 37, 22);
+      el("simVal_temp").textContent = `${T.toFixed(0)} °C`;
+      el("simMini_temp").textContent = "Regler = Temperatur. Kurve zeigt, wie sich die Wachstumsrate verändert.";
+      const explain =
+        (T < 15) ? "Sehr kalt: Enzyme arbeiten langsam → Wachstum stark verlangsamt." :
+        (T <= 45) ? "Im Bereich des Optimums: Enzyme arbeiten gut → Wachstum hoch." :
+        "Sehr heiß: Proteine/Enzyme verlieren ihre Struktur (Denaturierung) → Wachstum bricht ein.";
+      el("simExplain_temp").textContent = explain;
+      drawGrowth(el("cv_temp"), rate, `Wachstum (vereinfacht) bei ${T.toFixed(0)}°C`);
+    });
+
+    // Nährstoffe: 0..100% Versorgung (monoton)
+    setupSim("nutrients", () => {
+      const n = parseFloat(el("slider_nutrients").value);
+      const rate = satRate(n/100);
+      el("simVal_nutrients").textContent = `${n.toFixed(0)} %`;
+      el("simMini_nutrients").textContent = "Regler = Nährstoffangebot (vereinfacht). Mehr Nährstoffe → schnelleres Wachstum.";
+      const explain =
+        (n < 20) ? "Sehr wenig Nährstoffe: kaum Energie/Baustoffe → Wachstum sehr gering." :
+        (n < 60) ? "Mittlere Versorgung: Wachstum möglich, aber begrenzt." :
+        "Hohe Versorgung: Wachstum nahe maximal (solange andere Faktoren passen).";
+      el("simExplain_nutrients").textContent = explain;
+      drawGrowth(el("cv_nutrients"), rate, `Wachstum (vereinfacht) bei ${n.toFixed(0)}% Nährstoffen`);
+    });
+
+    // pH: 1..14, Optimum ~7, Spread ~5
+    setupSim("ph", () => {
+      const pH = parseFloat(el("slider_ph").value);
+      const rate = bellRate(pH, 7, 5);
+      el("simVal_ph").textContent = `pH ${pH.toFixed(1)}`;
+      el("simMini_ph").textContent = "Regler = pH-Wert. Abweichung vom Optimum hemmt Enzyme.";
+      const explain =
+        (pH < 3) ? "Sehr sauer: viele Enzyme funktionieren schlecht → Wachstum stark gehemmt." :
+        (pH <= 9) ? "Nähe zu neutral: für viele Bakterien günstig → Wachstum höher." :
+        "Sehr basisch: Enzyme/Membranen werden gestört → Wachstum sinkt.";
+      el("simExplain_ph").textContent = explain;
+      drawGrowth(el("cv_ph"), rate, `Wachstum (vereinfacht) bei pH ${pH.toFixed(1)}`);
+    });
+
+    // O2: 0..21% + Typ-Auswahl (aerob/streng anaerob/fakultativ)
+    // -> Wir ergänzen eine kleine Auswahl in der Sim-Box.
+    addOxygenTypeSelector();
+
+    setupSim("oxygen", () => {
+      const o2 = parseFloat(el("slider_oxygen").value);
+      const type = (el("o2type")?.value) || "aerob";
+      const rate = oxygenRate(o2, type);
+      el("simVal_oxygen").textContent = `${o2.toFixed(0)} % O₂`;
+      el("simMini_oxygen").textContent = "Regler = Sauerstoffgehalt. Zusätzlich kannst du den Bakterientyp wählen.";
+      const explain =
+        (type==="aerob")
+          ? "Aerob: nutzt O₂ zur Energiegewinnung → bei mehr O₂ meist schnelleres Wachstum."
+          : (type==="anaerob_strict")
+            ? "Streng anaerob: O₂ ist schädlich → bei mehr O₂ sinkt das Wachstum."
+            : "Fakultativ anaerob: kann mit/ohne O₂ wachsen → eher robust, aber mit O₂ oft etwas schneller.";
+      el("simExplain_oxygen").textContent = explain;
+      const typeLabel = type==="aerob" ? "aerob" : (type==="anaerob_strict" ? "streng anaerob" : "fakultativ");
+      drawGrowth(el("cv_oxygen"), rate, `Wachstum (vereinfacht) bei ${o2.toFixed(0)}% O₂ (${typeLabel})`);
+    });
+
+    // Wasser: aw*100 70..100 (vereinfacht)
+    setupSim("water", () => {
+      const aw100 = parseFloat(el("slider_water").value);
+      const aw = aw100/100;
+      const rate = waterRate(aw);
+      el("simVal_water").textContent = `verfügbares Wasser: ${(aw*100).toFixed(0)}%`;
+      el("simMini_water").textContent = "Regler = Wasserverfügbarkeit (vereinfacht). Weniger verfügbar (z. B. durch Salz/Zucker) → Wachstum sinkt.";
+      const explain =
+        (aw < 0.85) ? "Niedrige Wasserverfügbarkeit: durch Osmose verliert die Zelle Wasser → Wachstum stark gehemmt." :
+        (aw < 0.93) ? "Mittlere Verfügbarkeit: Wachstum möglich, aber deutlich gebremst." :
+        "Hohe Verfügbarkeit: gutes Wachstum (wenn die anderen Faktoren passen).";
+      el("simExplain_water").textContent = explain;
+      drawGrowth(el("cv_water"), rate, `Wachstum (vereinfacht) bei Wasserverfügbarkeit ${aw100.toFixed(0)}%`);
+    });
+  }
+
+  function setupSim(id, renderFn){
+    const slider = el(`slider_${id}`);
+    const rerender = ()=> renderFn();
+    slider.addEventListener("input", rerender);
+    // initial
+    renderFn();
+  }
+
+  function addOxygenTypeSelector(){
+    const box = el("simExplain_oxygen");
+    // In panelTemplate ist simExplain schon da; wir fügen oberhalb (in simBox) eine Auswahl ein.
+    // Wir hängen sie an simMini_oxygen an (sauber, ohne Template zu komplizieren).
+    const mini = el("simMini_oxygen");
+    const wrap = document.createElement("div");
+    wrap.style.marginTop = "10px";
+    wrap.innerHTML = `
+      <label class="mini" for="o2type">Bakterientyp (für die Simulation):</label>
+      <select id="o2type">
+        <option value="aerob">aerob (braucht O₂)</option>
+        <option value="anaerob_strict">streng anaerob (O₂ schädlich)</option>
+        <option value="facultative">fakultativ anaerob (kann beides)</option>
+      </select>
+    `;
+    mini.insertAdjacentElement("afterend", wrap);
+
+    el("o2type").addEventListener("change", ()=>{
+      // Trigger simulation update by dispatching input event
+      el("slider_oxygen").dispatchEvent(new Event("input"));
+    });
+  }
+
+  /**********************
+   * Checks + Completion
+   **********************/
+  function setupChecks(){
+    // Temperatur
+    el("check1_temp").addEventListener("click", ()=>{
+      const v = el("a1_temp").value;
+      const fb = el("fb1_temp");
+      if(v==="B"){fb.className="feedback good"; fb.textContent="Richtig: Bei zu hoher Temperatur denaturieren Proteine/Enzyme → Wachstum stoppt.";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Enzyme haben ein Temperatur-Optimum; zu heiß kann Proteine zerstören.";}
+    });
+    el("check2_temp").addEventListener("click", ()=>{
+      const a = el("a2a_temp").value, b = el("a2b_temp").value;
+      const fb = el("fb2_temp");
+      if(a==="slow" && b==="kill"){ fb.className="feedback good"; fb.textContent="Richtig: Kühlen verlangsamt, Abkochen tötet viele Bakterien."; }
+      else{ fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Kälte bremst Prozesse, starke Hitze schädigt Proteine/Membranen."; }
+    });
+
+    // Nährstoffe
+    el("check1_nutrients").addEventListener("click", ()=>{
+      const v = el("a1_nutrients").value;
+      const fb = el("fb1_nutrients");
+      if(v==="A"){fb.className="feedback good"; fb.textContent="Richtig: Ohne Energie/Baustoffe kein Zellaufbau → Teilung wird langsamer.";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Wachstum bedeutet Aufbau neuer Zellbestandteile → braucht Nährstoffe.";}
+    });
+    el("check2_nutrients").addEventListener("click", ()=>{
+      const v = el("a2_nutrients").value;
+      const fb = el("fb2_nutrients");
+      if(v==="sugar"){fb.className="feedback good"; fb.textContent="Richtig: Der knappste notwendige Stoff begrenzt das Wachstum (limitierender Faktor).";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Überlege, was am knappsten ist und als Energie/ Baustoff gebraucht wird.";}
+    });
+
+    // pH
+    el("check1_ph").addEventListener("click", ()=>{
+      const v = el("a1_ph").value;
+      const fb = el("fb1_ph");
+      if(v==="B"){fb.className="feedback good"; fb.textContent="Richtig: Viele Bakterien haben ein pH-Optimum nahe neutral (≈7).";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Extreme pH-Werte stören Enzyme; „neutral“ ist oft günstig.";}
+    });
+    el("check2_ph").addEventListener("click", ()=>{
+      const a = el("a2a_ph").value, b = el("a2b_ph").value;
+      const fb = el("fb2_ph");
+      if(a==="hemm" && b==="hemm_mild"){
+        fb.className="feedback good";
+        fb.textContent="Richtig: Im stark sauren Magen werden viele Keime gehemmt/abgetötet; die Haut hemmt milder.";
+      } else {
+        fb.className="feedback bad";
+        fb.textContent="Noch nicht. Tipp: Der Magen ist sehr sauer; die Haut ist weniger extrem.";
+      }
+    });
+
+    // O2
+    el("check1_oxygen").addEventListener("click", ()=>{
+      const a = el("a1a_oxygen").value, b = el("a1b_oxygen").value;
+      const fb = el("fb1_oxygen");
+      if(a==="need" && b==="avoid"){ fb.className="feedback good"; fb.textContent="Richtig: Aerob = braucht O₂; streng anaerob = verträgt O₂ nicht."; }
+      else{ fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: „anaerob“ heißt ohne O₂; streng anaerobe werden durch O₂ geschädigt."; }
+    });
+    el("check2_oxygen").addEventListener("click", ()=>{
+      const v = el("a2_oxygen").value;
+      const fb = el("fb2_oxygen");
+      if(v==="anaerob"){fb.className="feedback good"; fb.textContent="Richtig: Bei wenig O₂ passen anaerobe Arten besonders gut.";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Überlege, welche Gruppe ohne O₂ auskommt.";}
+    });
+
+    // Wasser
+    el("check1_water").addEventListener("click", ()=>{
+      const v = el("a1_water").value;
+      const fb = el("fb1_water");
+      if(v==="A"){fb.className="feedback good"; fb.textContent="Richtig: Viel Zucker bindet Wasser → Bakterien wachsen schlechter.";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Es geht um Wasserverfügbarkeit (Osmose), nicht um „Gift“.";}
+    });
+    el("check2_water").addEventListener("click", ()=>{
+      const v = el("a2_water").value;
+      const fb = el("fb2_water");
+      if(v==="out"){fb.className="feedback good"; fb.textContent="Richtig: In sehr salziger Umgebung tritt Wasser aus der Zelle aus (Osmose).";}
+      else{fb.className="feedback bad"; fb.textContent="Noch nicht. Tipp: Außen hohe Teilchenkonzentration → Wasser wandert nach außen.";}
+    });
+
+    // Mark complete with validation
+    ["temp","nutrients","ph","oxygen","water"].forEach(id=>{
+      el(`mark_${id}`).addEventListener("click", ()=>{
+        const ok = panelAllCorrect(id);
+        const fb = el(`fbDone_${id}`);
+        if(ok){
+          state.done[id] = true;
+          fb.className = "feedback good";
+          fb.textContent = "Abgeschlossen! Du kannst zurück zur Übersicht.";
+          saveState();
+          renderFactorCards();
+          updateProgress();
+        }else{
+          fb.className = "feedback bad";
+          fb.textContent = "Noch nicht abgeschlossen: Bearbeite beide Aufgaben korrekt (Prüfen).";
+        }
+      });
+    });
+  }
+
+  function panelAllCorrect(id){
+    if(id==="temp"){
+      return (el("a1_temp").value==="B") && (el("a2a_temp").value==="slow") && (el("a2b_temp").value==="kill");
+    }
+    if(id==="nutrients"){
+      return (el("a1_nutrients").value==="A") && (el("a2_nutrients").value==="sugar");
+    }
+    if(id==="ph"){
+      return (el("a1_ph").value==="B") && (el("a2a_ph").value==="hemm") && (el("a2b_ph").value==="hemm_mild");
+    }
+    if(id==="oxygen"){
+      return (el("a1a_oxygen").value==="need") && (el("a1b_oxygen").value==="avoid") && (el("a2_oxygen").value==="anaerob");
+    }
+    if(id==="water"){
+      return (el("a1_water").value==="A") && (el("a2_water").value==="out");
+    }
+    return false;
+  }
+
+  /**********************
+   * Summary + Downloads
+   **********************/
+  function renderSummary(){
+    el("sumName").textContent = state.studentName?.trim() || "—";
+    el("sumClass").textContent = state.studentClass?.trim() || "—";
+    el("sumDate").textContent = new Date().toLocaleDateString("de-DE");
+
+    el("summaryBody").innerHTML = FACTORS.map(f=>{
+      const kp = f.keyPoints;
+      return `
+        <tr>
+          <td><b>${f.title}</b></td>
+          <td>${kp.rate}</td>
+          <td>${kp.term}</td>
+          <td>${kp.example}</td>
+        </tr>
+      `;
+    }).join("");
+
+    el("transferAnswer").value = state.transferAnswer || "";
+  }
+
+  function drawSummaryCanvas(){
+    const c = el("summaryCanvas");
+    const ctx = c.getContext("2d");
+    const w = c.width, h = c.height;
+
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#0a1020";
+    ctx.fillRect(0,0,w,h);
+
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = "bold 42px system-ui";
+    ctx.fillText("Sicherung: Einflussfaktoren auf das Bakterienwachstum", 50, 70);
+
+    ctx.font = "22px system-ui";
+    ctx.fillStyle = "rgba(255,255,255,.78)";
+    const name = state.studentName?.trim() || "—";
+    const cls  = state.studentClass?.trim() || "—";
+    const date = new Date().toLocaleDateString("de-DE");
+    ctx.fillText(`Name: ${name}   |   Klasse: ${cls}   |   Datum: ${date}`, 50, 110);
+
+    const x0 = 50, y0 = 150;
+    const colW = [220, 420, 300, 360];
+    const headers = ["Faktor", "Wachstumsrate", "Begriff/Merksatz", "Beispiel"];
+    const rowH = 120;
+
+    ctx.fillStyle = "rgba(255,255,255,.10)";
+    ctx.fillRect(x0, y0, colW.reduce((a,b)=>a+b,0), 48);
+    ctx.strokeStyle = "rgba(255,255,255,.18)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x0, y0, colW.reduce((a,b)=>a+b,0), 48);
+
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = "bold 22px system-ui";
+    let x = x0 + 14;
+    headers.forEach((hd,i)=>{ ctx.fillText(hd, x, y0 + 32); x += colW[i]; });
+
+    ctx.font = "18px system-ui";
+    let y = y0 + 58;
+    FACTORS.forEach((f, idx)=>{
+      const kp = f.keyPoints;
+      ctx.fillStyle = idx%2===0 ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.03)";
+      ctx.fillRect(x0, y, colW.reduce((a,b)=>a+b,0), rowH);
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.strokeRect(x0, y, colW.reduce((a,b)=>a+b,0), rowH);
+
+      let cx = x0 + 14;
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+      wrapText(ctx, f.title, cx, y + 28, colW[0]-22, 24);
+      cx += colW[0];
+      ctx.fillStyle = "rgba(255,255,255,.82)";
+      wrapText(ctx, kp.rate, cx, y + 28, colW[1]-22, 22);
+      cx += colW[1];
+      wrapText(ctx, kp.term, cx, y + 28, colW[2]-22, 22);
+      cx += colW[2];
+      wrapText(ctx, kp.example, cx, y + 28, colW[3]-22, 22);
+
+      y += rowH + 8;
+    });
+
+    ctx.fillStyle = "rgba(255,255,255,.65)";
+    ctx.font = "18px system-ui";
+    ctx.fillText("Hinweis: Screenshot oder PNG speichern. Optionaler Transfertext steht ggf. separat im Textfeld.", 50, h-40);
+  }
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+    const words = String(text).split(" ");
+    let line = "";
+    let yy = y;
+    for(let n=0;n<words.length;n++){
+      const testLine = line + words[n] + " ";
+      if(ctx.measureText(testLine).width > maxWidth && n > 0){
+        ctx.fillText(line, x, yy);
+        line = words[n] + " ";
+        yy += lineHeight;
+      }else{
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, x, yy);
+  }
+
+  function downloadCanvasPNG(){
+    const c = el("summaryCanvas");
+    const link = document.createElement("a");
+    const safeName = (state.studentName?.trim() || "Sicherung").replaceAll(" ","_");
+    link.download = `Sicherung_Bakterienwachstum_${safeName}.png`;
+    link.href = c.toDataURL("image/png");
+    link.click();
+  }
+
+  function downloadTXT(){
+    const name = state.studentName?.trim() || "—";
+    const cls = state.studentClass?.trim() || "—";
+    const date = new Date().toLocaleDateString("de-DE");
+    let txt = `Sicherung: Einflussfaktoren auf das Bakterienwachstum\nName: ${name}\nKlasse: ${cls}\nDatum: ${date}\n\n`;
+    FACTORS.forEach(f=>{
+      txt += `- ${f.title}\n  Wachstumsrate: ${f.keyPoints.rate}\n  Begriff/Merksatz: ${f.keyPoints.term}\n  Beispiel: ${f.keyPoints.example}\n\n`;
+    });
+    const transfer = (el("transferAnswer").value || "").trim();
+    if(transfer) txt += `Optionaler Transfer:\n${transfer}\n`;
+
+    const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Sicherung_Bakterienwachstum_${(name||"Sicherung").replaceAll(" ","_")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /**********************
+   * Init
+   **********************/
+  function init(){
+    renderFactorCards();
+    updateProgress();
+
+    el("studentName").value = state.studentName || "";
+    el("studentClass").value = state.studentClass || "";
+    el("studentName").addEventListener("input", (e)=>{ state.studentName = e.target.value; saveState(); });
+    el("studentClass").addEventListener("input", (e)=>{ state.studentClass = e.target.value; saveState(); });
+
+    el("btnHome").addEventListener("click", ()=> setView("home"));
+    el("btnReset").addEventListener("click", ()=>{
+      if(confirm("Wirklich alles zurücksetzen?")){
+        state = structuredClone(defaultState);
+        saveState();
+        location.reload();
+      }
+    });
+
+    el("btnOpenSummary").addEventListener("click", ()=> setView("summary"));
+
+    el("btnDownloadPNG").addEventListener("click", ()=>{
+      state.transferAnswer = el("transferAnswer").value;
+      saveState();
+      drawSummaryCanvas();
+      downloadCanvasPNG();
+    });
+    el("btnDownloadTXT").addEventListener("click", ()=>{
+      state.transferAnswer = el("transferAnswer").value;
+      saveState();
+      downloadTXT();
+    });
+    el("btnPrint").addEventListener("click", ()=>{
+      state.transferAnswer = el("transferAnswer").value;
+      saveState();
+      window.print();
+    });
+    el("transferAnswer").addEventListener("input", (e)=>{ state.transferAnswer = e.target.value; saveState(); });
+
+    mountPanels();
+    setView("home");
+  }
+
+  init();
+</script>
+
+<style media="print">
+  body{background:#fff; color:#000;}
+  header, #home, .panel, #summaryCanvas{display:none !important;}
+  #summary{display:block !important;}
+  #summary .task{box-shadow:none !important;}
+</style>
+</body>
+</html>
